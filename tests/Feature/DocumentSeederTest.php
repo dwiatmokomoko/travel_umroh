@@ -130,7 +130,7 @@ class DocumentSeederTest extends TestCase
         $this->seed(DatabaseSeeder::class);
 
         $this->assertDatabaseCount('packages', 11);
-        $this->assertDatabaseCount('pages', 5);
+        $this->assertDatabaseCount('pages', 6);
         $this->assertDatabaseCount('articles', 2);
         $this->assertDatabaseCount('testimonials', 3);
         $this->assertDatabaseCount('users', 0);
@@ -156,7 +156,7 @@ class DocumentSeederTest extends TestCase
         $this->seed(DatabaseSeeder::class);
 
         $this->assertDatabaseCount('packages', 11);
-        $this->assertDatabaseCount('pages', 5);
+        $this->assertDatabaseCount('pages', 6);
         $this->assertDatabaseCount('site_settings', $settingCount);
         $this->assertDatabaseHas('packages', ['id' => $package->id, 'price' => 36000000, 'facilities' => 'Fasilitas diperbarui admin', 'description' => '', 'is_published' => false]);
         $this->assertDatabaseHas('pages', ['slug' => 'tentang-kami', 'body' => 'Profil diperbarui admin']);
