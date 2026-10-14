@@ -7,12 +7,40 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\Client\Request as ClientRequest;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Tests\TestCase;
 
 class ChatAssistantTest extends TestCase
 {
     use LazilyRefreshDatabase;
+
+    public function test_fallback_answers_out_of_town_booking_before_listing_packages(): void
+    {
+        config(['services.openai.enabled' => false]);
+        Http::fake();
+        $this->postJson('/chat', ['message' => 'saya dari solo apakah bisa pesan paket umroh'])
+            ->assertOk()->assertSee('Solo')->assertSee('seluruh Indonesia')
+            ->assertDontSee('Pilihan keberangkatan terdekat');
+        Http::assertNothingSent();
+    }
+
+    public function test_quota_failure_logs_only_safe_diagnostics_and_greets_visitor(): void
+    {
+        config(['services.openai.enabled' => true, 'services.openai.key' => 'test-secret']);
+        RateLimiter::clear('chat-ai:'.now('Asia/Jakarta')->format('Y-m-d'));
+        Log::spy();
+        Http::fake(['api.openai.com/v1/responses' => Http::response([
+            'error' => ['code' => 'insufficient_quota', 'message' => 'private test-secret'],
+        ], 429)]);
+        $this->postJson('/chat', ['message' => 'hai bang'])->assertOk()
+            ->assertJsonPath('mode', 'basic')->assertSee('selamat datang')
+            ->assertDontSee('belum diaktifkan')->assertDontSee('test-secret')->assertDontSee('insufficient_quota');
+        Log::shouldHaveReceived('warning')->once()->with('chat_ai_unavailable', [
+            'reason' => 'provider_response', 'http_status' => 429,
+            'error_code' => 'insufficient_quota', 'incomplete' => false,
+        ]);
+    }
 
     public function test_contacts_and_consultation_choices_use_the_three_supplied_numbers(): void
     {

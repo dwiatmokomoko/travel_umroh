@@ -7,6 +7,7 @@ use App\Models\Page;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 
@@ -27,6 +28,8 @@ class ChatAssistant
         $quotaKey = 'chat-ai:'.now('Asia/Jakarta')->format('Y-m-d');
         $allowed = RateLimiter::attempt($quotaKey, max(0, config('services.openai.daily_limit')), fn () => true, 86400);
         if (! $allowed) {
+            Log::warning('chat_ai_unavailable', ['reason' => 'local_daily_limit']);
+
             return [...$result, 'answer' => "Asisten AI sedang tidak tersedia. Berikut informasi dasar situs:\n\n".$fallback];
         }
 
@@ -34,6 +37,7 @@ class ChatAssistant
             'date' => now('Asia/Jakarta')->toDateString(),
             'business' => collect(config('safir'))->only(['name', 'company', 'license', 'address'])->all(),
             'contacts' => $contacts,
+            'service_area' => 'Konsultasi dan pendaftaran jamaah seluruh Indonesia, termasuk Solo/Surakarta. Bandara, titik kumpul, biaya penghubung dan ketersediaan harus dikonfirmasi kepada admin.',
             'packages' => $packages->map(fn ($package) => [
                 'name' => $package->name, 'date' => $package->departure_date->toDateString(),
                 'days' => $package->days, 'price_idr' => $package->price, 'airline' => $package->airline,
@@ -51,6 +55,7 @@ Jawab hanya tentang layanan Safir dan informasi umrah yang didukung DATA_SITUS. 
 Jangan menjamin kursi tersedia, harga final, visa, jadwal Raudhah, ketentuan kesehatan, atau status hukum terkini. Jika informasi tidak ada, katakan belum tersedia dan arahkan ke pilihan admin Wisnu, Ryan, atau Dwi yang aktif.
 Jangan meminta data paspor, kesehatan, kata sandi, atau pembayaran. Jangan memberikan nomor rekening atau mengaku menerima pemesanan/pembayaran. Jangan membuat URL atau nomor kontak sendiri. Tidak ada akses berita terkini/internet.
 Harga dan jadwal adalah data situs, perlu dikonfirmasi ke admin. Jangan mempromosikan paket yang tidak ada di DATA_SITUS.
+Jawab inti pertanyaan terlebih dahulu. Untuk sapaan, balas hangat dan tawarkan bantuan. Jika ditanya bisa memesan dari suatu kota, jelaskan cakupan layanan dahulu, lalu tanyakan bulan keberangkatan dan jumlah jamaah. Jangan langsung memberikan daftar paket bila tidak diminta.
 PROMPT;
         try {
             $response = Http::withToken(config('services.openai.key'))->acceptJson()->connectTimeout(5)->timeout(25)
@@ -66,8 +71,15 @@ PROMPT;
                     return [...$result, 'mode' => 'ai', 'answer' => Str::limit($answer, 3000)];
                 }
             }
+            $code = $response->json('error.code');
+            Log::warning('chat_ai_unavailable', [
+                'reason' => 'provider_response',
+                'http_status' => $response->status(),
+                'error_code' => in_array($code, ['invalid_api_key', 'insufficient_quota', 'rate_limit_exceeded', 'model_not_found', 'organization_usage_limit_exceeded'], true) ? $code : 'other',
+                'incomplete' => $response->json('status') === 'incomplete',
+            ]);
         } catch (ConnectionException) {
-            // Keep provider credentials, responses, and visitor messages out of logs.
+            Log::warning('chat_ai_unavailable', ['reason' => 'connection_failure']);
         }
 
         return [...$result, 'answer' => "Asisten AI sedang tidak tersedia. Berikut informasi dasar situs:\n\n".$fallback];
@@ -76,6 +88,12 @@ PROMPT;
     private function basicAnswer(string $message, Collection $packages): string
     {
         $question = Str::lower($message);
+        if (preg_match('/\b(dari|domisili|tinggal|asal)\b/u', $question) && Str::contains($question, ['pesan', 'daftar', 'bisa', 'boleh', 'ikut'])) {
+            return 'Bisa berkonsultasi dan mendaftar dari luar Jogja, termasuk Solo/Surakarta. Safir melayani jamaah seluruh Indonesia. Bandara keberangkatan, titik kumpul, dan biaya perjalanan penghubung perlu dikonfirmasi ke admin. Rencananya ingin berangkat bulan apa dan berapa jamaah? Silakan lanjutkan dengan Wisnu, Ryan, atau Dwi melalui pilihan kontak di bawah.';
+        }
+        if (preg_match('/^(hai|halo|hello|hi|assalamualaikum|selamat pagi|selamat siang|selamat sore|selamat malam)\b/u', $question)) {
+            return 'Halo, selamat datang di Safir Jogja! Saya asisten virtual. Ada yang bisa dibantu tentang paket umrah, biaya, jadwal, atau persiapan perjalanan?';
+        }
         if (Str::contains($question, ['alamat', 'kantor', 'lokasi'])) {
             return 'Kantor Bantul: '.config('safir.address')."\nSilakan membuat janji dengan admin sebelum berkunjung.";
         }
@@ -93,6 +111,6 @@ PROMPT;
             }
         }
 
-        return 'Saya asisten virtual dalam mode informasi dasar. Saya dapat menampilkan ringkasan paket, harga, fasilitas, dan alamat kantor. Untuk pertanyaan khusus, pilih admin di bawah. Jawaban AI belum diaktifkan.';
+        return 'Saya asisten virtual dalam mode informasi dasar. Saya dapat menampilkan ringkasan paket, harga, fasilitas, dan alamat kantor. Untuk pertanyaan khusus, pilih admin di bawah.';
     }
 }
