@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Page;
 use App\Models\SiteSetting;
 use Database\Seeders\PageSeeder;
+use Database\Seeders\UmrahPlanningSeoSeeder;
 use Database\Seeders\UmrahTopicsSeoSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
@@ -12,6 +13,20 @@ use Tests\TestCase;
 class UmrahTopicsSeoTest extends TestCase
 {
     use LazilyRefreshDatabase;
+
+    public function test_planning_guide_is_visible_and_preserves_edits_on_reseed(): void
+    {
+        $this->seed(PageSeeder::class);
+        $this->seed(UmrahPlanningSeoSeeder::class);
+        $this->get('/panduan-umrah')->assertOk()->assertSee('Paket umroh quad, triple, dan double');
+        $page = Page::where('slug', 'panduan-umrah')->firstOrFail();
+        $body = $page->body;
+        $this->seed(UmrahPlanningSeoSeeder::class);
+        $this->assertSame($body, $page->fresh()->body);
+        $page->update(['body' => 'Panduan admin']);
+        $this->seed(UmrahPlanningSeoSeeder::class);
+        $this->assertSame('Panduan admin', $page->fresh()->body);
+    }
 
     public function test_topics_and_metadata_are_rendered_on_relevant_pages(): void
     {
