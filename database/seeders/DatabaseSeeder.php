@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
                 LocalSeoSeeder::class,
                 RegionalSeoSeeder::class,
                 TravelComparisonSeeder::class,
+                UmrahTopicsSeoSeeder::class,
                 ArticleSeeder::class,
                 TestimonialSeeder::class,
                 AdminSeeder::class,
