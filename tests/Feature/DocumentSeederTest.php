@@ -27,7 +27,7 @@ class DocumentSeederTest extends TestCase
         $this->assertSame($body, Page::where('slug', 'umrah-jogja')->firstOrFail()->body);
         $this->get('/umrah-jogja')->assertOk()->assertSee('Travel Umroh Jogja')
             ->assertSee('15 Oktober 2026')->assertSee('0821-3604-2015')
-            ->assertSee('href="/paket-umrah"', false)->assertDontSee('Wonosari');
+            ->assertSee('href="/paket-umrah"', false)->assertDontSee('Kantor pelayanan Wonosari');
         config(['services.google_site_verification' => 'verification-test']);
         $this->get('/')->assertOk()->assertSee('name="google-site-verification" content="verification-test"', false);
     }
@@ -77,7 +77,7 @@ class DocumentSeederTest extends TestCase
         $this->assertDatabaseMissing('site_settings', ['key' => 'business_gunungkidul']);
         $this->assertStringContainsString('Catatan admin tetap ada.', Page::where('slug', 'umrah-jogja')->firstOrFail()->body);
         foreach (['/', '/kontak', '/umrah-jogja', '/tentang-kami'] as $url) {
-            $this->get($url)->assertOk()->assertDontSee('Wonosari')->assertDontSee('Tentara Pelajar')->assertDontSee('Kantor pelayanan Gunungkidul')->assertDontSee('{gunungkidul}');
+            $this->get($url)->assertOk()->assertDontSee('Kantor pelayanan Wonosari')->assertDontSee('Tentara Pelajar')->assertDontSee('Kantor pelayanan Gunungkidul')->assertDontSee('{gunungkidul}');
         }
         config(['services.openai.enabled' => false]);
         $this->postJson('/chat', ['message' => 'Alamat kantor?'])->assertOk()->assertSee('Kantor Bantul')->assertDontSee('Gunungkidul');
