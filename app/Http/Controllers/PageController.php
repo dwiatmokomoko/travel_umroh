@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Article;
+use App\Models\HeroSlide;
 use App\Models\Package;
 use App\Models\Page;
 use App\Models\Testimonial;
@@ -15,6 +16,7 @@ class PageController extends Controller
     public function home(SiteContent $site): View
     {
         return view('home', [
+            'heroSlides' => HeroSlide::where('is_published', true)->whereNotNull('image')->orderBy('sort_order')->orderBy('id')->get(),
             'packages' => Package::upcoming()->orderBy('departure_date')->limit(3)->get(),
             'minimumPrice' => Package::upcoming()->min('price'),
             'articles' => Article::published()->latest('published_at')->limit(3)->get(),

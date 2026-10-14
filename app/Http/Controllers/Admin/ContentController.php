@@ -89,6 +89,16 @@ class ContentController extends Controller
         }
         $rules['image_upload'] = ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096', 'dimensions:max_width=5000,max_height=5000'];
         $rules['remove_image'] = ['nullable', 'boolean'];
+        if ($section === 'articles') {
+            $rules['youtube_url'][] = function ($attribute, $value, $fail) {
+                if ($value && ! Article::youtubeId($value)) {
+                    $fail('Gunakan tautan video YouTube yang valid (watch, youtu.be, shorts, atau live).');
+                }
+            };
+        }
+        if ($section === 'slides' && $request->boolean('is_published') && (! $record->image || $request->boolean('remove_image'))) {
+            $rules['image_upload'][0] = 'required';
+        }
         $data = $request->validate($rules);
         unset($data['image_upload'], $data['remove_image']);
         if ($section !== 'pages') {

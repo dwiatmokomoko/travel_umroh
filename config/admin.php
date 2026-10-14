@@ -1,11 +1,19 @@
 <?php
 
 use App\Models\Article;
+use App\Models\HeroSlide;
 use App\Models\Package;
 use App\Models\Page;
 use App\Models\Testimonial;
 
 return [
+    'slides' => ['label' => 'Hero Carousel', 'model' => HeroSlide::class, 'title' => 'title', 'fields' => [
+        'title' => ['Judul slide', 'text', 'required|string|max:120'],
+        'caption' => ['Keterangan singkat', 'text', 'nullable|string|max:200'],
+        'image_alt' => ['Deskripsi gambar', 'text', 'required|string|max:200'],
+        'sort_order' => ['Urutan tampil (angka terkecil dahulu)', 'number', 'required|integer|min:0|max:10000'],
+        'is_published' => ['Tampilkan slide', 'checkbox', 'boolean'],
+    ]],
     'packages' => ['label' => 'Paket Umrah', 'model' => Package::class, 'title' => 'name', 'fields' => [
         'name' => ['Nama paket', 'text', 'required|string|max:180'],
         'slug' => ['URL paket', 'text', 'required|string|max:180|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/'],
@@ -31,6 +39,7 @@ return [
         'body' => ['Isi berita (Markdown)', 'textarea', 'required|string|max:100000'],
         'author' => ['Penulis', 'text', 'required|string|max:150'],
         'source_url' => ['Tautan sumber resmi (opsional)', 'url', 'nullable|url:http,https|max:1000'],
+        'youtube_url' => ['URL video YouTube (opsional, bukan kode iframe)', 'url', 'nullable|url:https|max:1000'],
         'image_alt' => ['Deskripsi gambar untuk aksesibilitas', 'text', 'nullable|string|max:200'],
         'seo_title' => ['Judul SEO', 'text', 'nullable|string|max:70'],
         'seo_description' => ['Deskripsi SEO', 'textarea', 'nullable|string|max:170'],

@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="{{ asset('carousel.js') }}?v=1" defer></script>
     <link rel="stylesheet" href="{{ asset('chat.css') }}?v=1">
     <script src="{{ asset('chat.js') }}?v=1" defer></script>
     <title>{{ $title }}</title>
@@ -34,6 +35,8 @@
     <link rel="icon" href="{{ $site->image('logo_image', 'images/safir-logo.jpeg') }}">
     <link rel="stylesheet" href="{{ asset('site.css') }}?v=4">
     <script src="{{ asset('site.js') }}?v=4" defer></script>
+    <link rel="stylesheet" href="{{ asset('media.css') }}?v=1">
+
     @php
         $business = [
             '@context' => 'https://schema.org', '@type' => 'TravelAgency', '@id' => route('home').'#business',
@@ -65,8 +68,9 @@
 </header>
 <main id="main">@yield('content')@yield('community')
 @if(request()->routeIs('privacy'))
-<section class="container section"><h2>Percakapan asisten virtual</h2><p>Dalam mode AI, pertanyaan dan paling banyak enam pesan terakhir dikirim ke OpenAI untuk menyiapkan jawaban. Aplikasi tidak menyimpan isi percakapan ke database; riwayat di layar hanya berada di memori halaman sampai halaman dimuat ulang atau tombol hapus ditekan. Pemrosesan penyedia mengikuti kebijakan datanya. Mode informasi dasar tidak mengirim pesan ke OpenAI. Jangan masukkan data paspor, kesehatan, atau pembayaran. Tombol WhatsApp membuka percakapan dengan admin pilihan Anda; pesan dikirim setelah Anda mengirimkannya di WhatsApp.</p></section>
+<section class="container section"><h2>Peta dan video tersemat</h2><p>Halaman lokasi memuat peta Google Maps. Berita tertentu dapat memuat video YouTube. Saat konten tersemat dimuat, browser menghubungi penyedia tersebut yang memproses data teknis sesuai kebijakan privasinya.</p><h2>Percakapan asisten virtual</h2><p>Dalam mode AI, pertanyaan dan paling banyak enam pesan terakhir dikirim ke OpenAI untuk menyiapkan jawaban. Aplikasi tidak menyimpan isi percakapan ke database; riwayat di layar hanya berada di memori halaman sampai halaman dimuat ulang atau tombol hapus ditekan. Pemrosesan penyedia mengikuti kebijakan datanya. Mode informasi dasar tidak mengirim pesan ke OpenAI. Jangan masukkan data paspor, kesehatan, atau pembayaran. Tombol WhatsApp membuka percakapan dengan admin pilihan Anda; pesan dikirim setelah Anda mengirimkannya di WhatsApp.</p></section>
 @endif
+@if(request()->routeIs('home', 'contact', 'local')) @include('components.office-map') @endif
 </main>
 <section class="closing"><div class="container closing-inner"><div><p class="eyebrow">{{ $site->text('copy2_006') }}</p><h2>{{ $site->text('copy2_007') }}</h2><p>{{ $site->text('copy2_008') }}</p></div>@if($site->pageVisible('kontak'))<a class="button light" href="{{ route('contact') }}">{{ $site->text('copy2_009') }}<span aria-hidden="true">↗</span></a>@endif</div></section>
 <footer><div class="container footer-grid"><div><div class="footer-brand">{{ $site->text('copy2_010') }}<span>{{ $site->text('copy2_011') }}</span></div><p>{{ $site->text('copy2_012') }}<br>{{ $site->text('copy2_013') }}</p><p class="fine">{{ $site->text('copy2_014') }}<br>Nomor izin PPIU {{ config('safir.license') }}</p></div><div><h3>{{ $site->text('copy2_015') }}</h3><a href="{{ route('packages.index') }}">{{ $site->text('copy2_016') }}</a>@if($site->pageVisible('umrah-jogja'))<a href="{{ route('local') }}">{{ $site->text('copy2_017') }}</a>@endif
