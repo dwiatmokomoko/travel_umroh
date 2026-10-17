@@ -28,7 +28,17 @@ class PackageController extends Controller
             $query->where('days', $filters['days']);
         }
 
+        $planningStart = now('Asia/Jakarta')->startOfMonth();
+        $monthlyCounts = Package::upcoming()->where('departure_date', '<', $planningStart->copy()->addMonths(60))
+            ->get(['departure_date'])->countBy(fn ($package) => $package->departure_date->format('Y-m'));
+        $planningMonths = collect(range(0, 59))->map(function (int $offset) use ($planningStart, $monthlyCounts): array {
+            $date = $planningStart->copy()->addMonths($offset);
+
+            return ['key' => $date->format('Y-m'), 'label' => $date->translatedFormat('F Y'), 'year' => $date->year, 'count' => $monthlyCounts->get($date->format('Y-m'), 0)];
+        });
+
         return view('packages.index', [
+            'planningMonths' => $planningMonths,
             'packages' => $query->orderBy(($filters['sort'] ?? 'date') === 'price' ? 'price' : 'departure_date')->orderBy('id')->get(),
             'months' => Package::upcoming()->orderBy('departure_date')->get(['departure_date'])->unique(fn ($package) => $package->departure_date->format('Y-m')),
             'durations' => Package::upcoming()->distinct()->orderBy('days')->pluck('days'),

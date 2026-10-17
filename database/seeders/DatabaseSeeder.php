@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
                 TravelComparisonSeeder::class,
                 UmrahTopicsSeoSeeder::class,
                 UmrahPlanningSeoSeeder::class,
+                TrustSeoSeeder::class,
                 ArticleSeeder::class,
                 TestimonialSeeder::class,
                 AdminSeeder::class,
